@@ -81,4 +81,77 @@ git tag -d tag_name            # 删除标签
 git push origin tag_name       # 推送指定标签到远端
 git push origin --tags         # 推送所有标签
 git push origin :refs/tags/tag_name  # 删除远端标签
+
+```
+
+# 在 Windows 上配置 GitHub 的 SSH 密钥
+
+## 1. 检查现有 SSH 密钥
+首先，检查是否已有 SSH 密钥：
+```bash
+ls -al ~/.ssh
+```
+默认情况下，公钥文件名为 `id_rsa.pub` 或 `id_ed25519.pub`。
+
+---
+
+## 2. 生成新的 SSH 密钥（如无）
+如果没有密钥，生成一个新的：
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+如果系统不支持 `ed25519`，使用 `rsa`：
+```bash
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+按提示保存密钥文件并设置密码。
+
+---
+
+## 3. 启动 SSH 代理
+确保 SSH 代理正在运行：
+```bash
+eval "$(ssh-agent -s)"
+```
+
+---
+
+## 4. 添加 SSH 私钥到代理
+将私钥添加到 SSH 代理：
+```bash
+ssh-add ~/.ssh/id_ed25519
+```
+如果是 `rsa` 密钥，替换为 `id_rsa`。
+
+---
+
+## 5. 复制 SSH 公钥
+复制公钥内容：
+```bash
+clip < ~/.ssh/id_ed25519.pub
+```
+如果是 `rsa` 密钥，替换为 `id_rsa.pub`。
+
+---
+
+## 6. 添加公钥到 GitHub
+1. 登录 GitHub，进入 **Settings** > **SSH and GPG keys**。
+2. 点击 **New SSH key**，输入标题并粘贴公钥内容。
+3. 点击 **Add SSH key**。
+
+---
+
+## 7. 测试连接
+测试 SSH 连接：
+```bash
+ssh -T git@github.com
+```
+如果看到你的用户名，说明配置成功。
+
+---
+
+## 8. 使用 SSH 克隆仓库
+现在可以使用 SSH 克隆仓库：
+```bash
+git clone git@github.com:username/repository.git
 ```
