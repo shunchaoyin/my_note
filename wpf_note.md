@@ -396,3 +396,304 @@ namespace WpfApp
 ```xml
 <Button Content="Primary Button" Style="{StaticResource PrimaryButtonStyle}" />
 ```
+
+## prism框架的使用
+Prism 是一个功能强大的框架，专为构建模块化、可扩展的 XAML 应用程序而设计。它支持 WPF、UWP、Xamarin.Forms 和 .NET MAUI 等平台，并提供了完整的 MVVM（Model-View-ViewModel）实现，以及依赖注入、导航、事件聚合等高级功能。
+以下是 **Prism** 各个核心功能的详细说明和示例，帮助你更好地理解如何使用这些功能。
+
+---
+
+### 1. **MVVM 支持**
+```csharp
+using Prism.Commands;
+using Prism.Mvvm;
+
+public class MainViewModel : BindableBase
+{
+    private string _name;
+    public string Name
+    {
+        get { return _name; }
+        set { SetProperty(ref _name, value); }
+    }
+
+    public DelegateCommand SayHelloCommand { get; }
+
+    public MainViewModel()
+    {
+        SayHelloCommand = new DelegateCommand(SayHello);
+    }
+
+    private void SayHello()
+    {
+        MessageBox.Show($"Hello, {Name}!");
+    }
+}
+```
+```xml
+<Window x:Class="WpfApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Prism MVVM Example" Height="200" Width="300">
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBox Text="{Binding Name}" Width="150" />
+            <Button Content="Say Hello" Command="{Binding SayHelloCommand}" Margin="0 10 0 0" />
+        </StackPanel>
+    </Grid>
+</Window>
+```
+
+---
+
+### 2. **依赖注入（Dependency Injection）**
+
+Prism 支持多种依赖注入容器（如 Unity、DryIoc），并提供了完整的依赖注入解决方案。
+```csharp
+using Prism.Ioc;
+
+public class App : PrismApplication
+{
+    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    {
+        // 注册服务
+        containerRegistry.Register<IMyService, MyService>();
+    }
+}
+```
+注入服务
+```csharp
+using Prism.Mvvm;
+
+public class MyViewModel : BindableBase
+{
+    private readonly IMyService _myService;
+
+    public MyViewModel(IMyService myService)
+    {
+        _myService = myService;
+    }
+}
+```
+## 3. **导航（Navigation）**
+
+Prism 提供了强大的导航功能，支持 ViewModel 之间的导航，并允许传递参数。
+```csharp
+using Prism.Commands;
+using Prism.Mvvm;
+using Prism.Regions;
+
+public class MainViewModel : BindableBase
+{
+    private readonly IRegionManager _regionManager;
+
+    public DelegateCommand NavigateCommand { get; }
+
+    public MainViewModel(IRegionManager regionManager)
+    {
+        _regionManager = regionManager;
+        NavigateCommand = new DelegateCommand(Navigate);
+    }
+
+    private void Navigate()
+    {
+        // 导航到另一个视图
+        _regionManager.RequestNavigate("ContentRegion", "MyView");
+    }
+}
+```
+
+---
+
+### 4. **事件聚合（Event Aggregator）**
+
+### 功能描述
+Prism 的事件聚合器（Event Aggregator）允许 ViewModel 之间通过事件进行松耦合通信。
+
+定义事件
+```csharp
+using Prism.Events;
+
+public class MessageEvent : PubSubEvent<string> { }
+```
+发布事件
+```csharp
+using Prism.Commands;
+using Prism.Events;
+using Prism.Mvvm;
+
+public class PublisherViewModel : BindableBase
+{
+    private readonly IEventAggregator _eventAggregator;
+
+    public DelegateCommand PublishCommand { get; }
+
+    public PublisherViewModel(IEventAggregator eventAggregator)
+    {
+        _eventAggregator = eventAggregator;
+        PublishCommand = new DelegateCommand(Publish);
+    }
+
+    private void Publish()
+    {
+        // 发布事件
+        _eventAggregator.GetEvent<MessageEvent>().Publish("Hello, Prism!");
+    }
+}
+```
+
+#### 订阅事件
+```csharp
+using Prism.Events;
+using Prism.Mvvm;
+
+public class SubscriberViewModel : BindableBase
+{
+    public SubscriberViewModel(IEventAggregator eventAggregator)
+    {
+        // 订阅事件
+        eventAggregator.GetEvent<MessageEvent>().Subscribe(OnMessageReceived);
+    }
+
+    private void OnMessageReceived(string message)
+    {
+        // 处理接收到的消息
+        MessageBox.Show(message);
+    }
+}
+```
+### 5. **模块化（Modularity）**
+Prism 支持将应用程序拆分为多个模块，每个模块可以独立开发、测试和部署。
+模块定义
+```csharp
+using Prism.Modularity;
+
+public class MyModule : IModule
+{
+    public void OnInitialized(IContainerProvider containerProvider)
+    {
+        // 模块初始化逻辑
+    }
+
+    public void RegisterTypes(IContainerRegistry containerRegistry)
+    {
+        // 注册模块中的服务或视图
+        containerRegistry.RegisterForNavigation<MyView, MyViewModel>();
+    }
+}
+```
+
+#### 应用程序启动
+```csharp
+using Prism.Ioc;
+using Prism.Unity;
+using System.Windows;
+
+namespace MyApp
+{
+    public partial class App : PrismApplication
+    {
+        protected override Window CreateShell()
+        {
+            return Container.Resolve<MainWindow>();
+        }
+
+        protected override void RegisterTypes(IContainerRegistry containerRegistry)
+        {
+            // 注册模块
+            containerRegistry.RegisterModule<MyModule>();
+        }
+    }
+}
+```
+
+---
+
+### 6. **区域（Regions）**
+
+Prism 的区域（Regions）功能允许将 UI 划分为多个区域，每个区域可以动态加载不同的视图。
+
+定义区域
+```xml
+<Window x:Class="MyApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <ContentControl prism:RegionManager.RegionName="ContentRegion" />
+    </Grid>
+</Window>
+```
+动态加载视图
+```csharp
+using Prism.Regions;
+
+public class MainViewModel
+{
+    private readonly IRegionManager _regionManager;
+
+    public MainViewModel(IRegionManager regionManager)
+    {
+        _regionManager = regionManager;
+        _regionManager.RegisterViewWithRegion("ContentRegion", typeof(MyView));
+    }
+}
+```
+
+### 7. **配置（Configuration）**
+
+Prism 提供了配置功能，支持从配置文件或代码中读取配置。
+
+```csharp
+using Prism.Configuration;
+
+public class MyViewModel : BindableBase
+{
+    private readonly IConfigurationService _configService;
+
+    public MyViewModel(IConfigurationService configService)
+    {
+        _configService = configService;
+        var setting = _configService.GetSetting("MySetting");
+    }
+}
+```
+
+---
+
+### 8.......... **国际化（Localization）**
+
+### 功能描述
+Prism 提供了国际化功能，支持多语言应用程序。
+
+```csharp
+using Prism.Localization;
+
+public class MyViewModel : BindableBase
+{
+    private readonly ILocalizationService _localizationService;
+
+    public MyViewModel(ILocalizationService localizationService)
+    {
+        _localizationService = localizationService;
+        var greeting = _localizationService.GetString("Greeting");
+    }
+}
+```
+
+---
+
+### 10. **总结**
+
+| 功能                  | 描述                                                                 |
+|-----------------------|----------------------------------------------------------------------|
+| **MVVM 支持**         | 提供完整的 MVVM 实现，包括 BindableBase 和 DelegateCommand。         |
+| **依赖注入**          | 支持多种依赖注入容器，提供完整的依赖注入解决方案。                   |
+| **导航**              | 提供强大的导航功能，支持 ViewModel 之间的导航。                      |
+| **事件聚合**          | 实现 ViewModel 之间的松耦合通信。                                   |
+| **模块化**            | 支持将应用程序拆分为多个模块，适合大型项目。                         |
+| **区域**              | 允许将 UI 划分为多个区域，支持动态加载视图。                         |
+| **日志记录**          | 提供日志记录功能，支持多种日志记录器。                               |
+| **配置**              | 支持从配置文件或代码中读取配置。                                     |
+| **国际化**            | 支持多语言应用程序，提供资源管理和语言切换功能。                     |
+
