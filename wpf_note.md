@@ -145,6 +145,7 @@ public partial class MainViewModel : ObservableObject
         MessageBox.Show($"Hello, {Name}!");
     }
 }
+
 ```
 
 ### (2) **绑定 ViewModel 到 View**
@@ -697,3 +698,37 @@ public class MyViewModel : BindableBase
 | **配置**              | 支持从配置文件或代码中读取配置。                                     |
 | **国际化**            | 支持多语言应用程序，提供资源管理和语言切换功能。                     |
 
+
+# p23讲
+中设置导航样式失败，不知为何
+```XMLML
+            <Style x:Key="MyListBoxItemStyle" TargetType="ListBoxItem">
+                <Setter Property="MinHeight" Value="40"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}" >
+                            <Grid>
+                                <Border x:Name="borderHeader"/>
+                                <Border x:Name="border" />
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalAlignment}"  VerticalAlignment="{TemplateBinding VerticalAlignment}"/>
+                            </Grid>
+
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="borderHeader" Property="BorderThickness" Value="4,0,0,0" />
+                                    <Setter TargetName="borderHeader" Property="BorderBrush" Value="{DynamicResource PrimaryHueLightBrush}" />
+                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                                    <Setter TargetName="border" Property="Opacity" Value="0.6" />
+                                </Trigger>
+
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                                    <Setter TargetName="border" Property="Opacity" Value="0.2" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+
+                    </Setter.Value>
+                </Setter>
+            </Style>
+```
