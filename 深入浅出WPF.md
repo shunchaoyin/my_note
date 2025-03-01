@@ -94,7 +94,21 @@ Object
 | 绑定支持     | 支持双向绑定（Text属性）  | 支持单向绑定（Text属性）        |
 | 事件支持     | 支持TextChanged等事件     | 无特定事件                      |
 
+### `List<T>` 和 `ObservableCollection<T>` 
 
+**主要区别**
+
+| 特性                     | `List<T>`                          | `ObservableCollection<T>`          |
+|--------------------------|------------------------------------|------------------------------------|
+| **命名空间**             | `System.Collections.Generic`      | `System.Collections.ObjectModel`  |
+| **数据绑定支持**         | 不支持自动通知 UI 更新            | 支持自动通知 UI 更新              |
+| **性能**                 | 更高                               | 较低（因为需要处理通知机制）      |
+| **适用场景**             | 后台数据处理、非 UI 绑定场景       | UI 绑定场景（如 WPF、Xamarin）    |
+| **事件通知**             | 无                                 | 提供 `CollectionChanged` 事件     |
+
+---
+- `List<T>` 是一个通用的高性能集合，适合后台数据处理。
+- `ObservableCollection<T>` 是为 UI 数据绑定设计的集合，支持自动更新通知。
 
 
 
