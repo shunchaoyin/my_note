@@ -112,3 +112,191 @@ Object
 
 
 
+### 依赖属性（Dependency Property）的存在原因
+
+---
+
+| **原因/优势**            | **传统 CLR 属性的局限性**                          | **依赖属性的解决方案**                          | **示例/说明**                                                                 |
+|--------------------------|--------------------------------------------------|-----------------------------------------------|-------------------------------------------------------------------------------|
+| **支持数据绑定**         | 无法直接支持数据绑定。                            | 内置数据绑定支持，实现双向绑定和动态更新。      | `<TextBox Text="{Binding UserName}" />`                                       |
+| **支持动画**             | 无法直接被动画系统修改。                          | 可以被动画系统直接操作，实现平滑动画效果。      | `<DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" />`     |
+| **支持样式和模板**       | 无法通过样式和模板动态设置值。                    | 可以通过样式、模板和触发器动态设置值。          | `<Style TargetType="Button"><Setter Property="Background" Value="LightBlue"/></Style>` |
+| **属性值继承**           | 无法实现属性值的继承。                            | 支持属性值继承，父元素的值可以传递给子元素。    | `<StackPanel TextElement.FontSize="20"><Button Content="Button 1"/></StackPanel>` |
+| **内存优化**             | 每个对象都会为属性分配内存，即使未设置值。        | 只有在显式设置时分配内存，未设置时使用默认值。  | `DependencyProperty.Register("MyProperty", typeof(string), typeof(MyControl))` |
+| **属性值优先级**         | 无法处理多个值源（如本地值、样式、动画等）的优先级。 | 支持多值源，并根据优先级决定最终值。            | 优先级顺序：动画 > 本地值 > 模板属性 > 样式触发器 > 样式设置器 > 默认值。      |
+| **属性更改通知**         | 需要手动实现属性更改通知（如 `INotifyPropertyChanged`）。 | 内置属性更改通知机制，自动触发通知。            | `PropertyMetadata(OnMyPropertyChanged)`                                       |
+| **只读属性支持**         | 无法实现只读属性。                                | 支持只读依赖属性，通过 `RegisterReadOnly` 注册。| `DependencyProperty.RegisterReadOnly("IsActive", typeof(bool), typeof(MyControl))` |
+
+---
+
+### DependencyObject 和DependencyProperty
+- **`DependencyObject`**:
+  - 是依赖属性的载体，负责存储和管理依赖属性的值。
+  - 提供 `GetValue` 和 `SetValue` 方法，用于操作依赖属性。
+  - 支持属性值继承和属性更改通知的触发。
+
+- **`DependencyProperty`**:
+  - 是依赖属性的定义，负责注册依赖属性并定义其行为（如默认值、回调函数等）。
+  - 提供属性值优先级规则和属性更改通知机制。
+
+- **协作方式**:
+  - `DependencyProperty` 定义属性的规则和行为。
+  - `DependencyObject` 存储属性的值，并根据 `DependencyProperty` 的规则管理属性。
+
+
+### **示例代码**
+```csharp
+public class MyControl : DependencyObject
+{
+    // 注册依赖属性
+    public static readonly DependencyProperty MyPropertyProperty =
+        DependencyProperty.Register(
+            name: "MyProperty",
+            propertyType: typeof(string),
+            ownerType: typeof(MyControl),
+            typeMetadata: new FrameworkPropertyMetadata(
+                defaultValue: "Default Value",
+                propertyChangedCallback: OnMyPropertyChanged
+            )
+        );
+
+    // CLR 属性包装器
+    public string MyProperty
+    {
+        get { return (string)GetValue(MyPropertyProperty); }
+        set { SetValue(MyPropertyProperty, value); }
+    }
+
+    // 属性更改回调
+    private static void OnMyPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        Console.WriteLine($"MyProperty changed from {e.OldValue} to {e.NewValue}");
+    }
+}
+```
+```xml
+<Window x:Class="MyApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MyApp">
+    <Grid>
+        <local:MyControl MyProperty="Hello, World!" />
+    </Grid>
+</Window>
+```
+
+```csharp
+MyControl control = new MyControl();
+control.MyProperty = "New Value";  // 设置属性值
+Console.WriteLine(control.MyProperty);  // 获取属性值
+
+//输出
+MyProperty changed from Default Value to Hello, World!
+MyProperty changed from Hello, World! to New Value
+```
+
+---
+
+### **附加属性？**
+**附加属性（Attached Property）** 是 WPF（Windows Presentation Foundation）和 UWP（Universal Windows Platform）等 XAML 框架中的一种特殊类型的依赖属性。它允许一个对象为另一个对象定义属性，即使该属性不属于定义它的类。附加属性通常用于布局、动画和数据绑定等场景。
+
+附加属性的特点
+- **不属于定义它的类**: 附加属性定义在一个类中，但可以附加到其他类的对象上。
+- **全局可用**: 可以在任何对象上使用附加属性。
+- **支持依赖属性功能**: 附加属性具备依赖属性的所有功能，如数据绑定、动画、样式等。
+
+场景描述
+Human 类: 表示一个人，具有姓名、年龄等属性。
+School 类: 表示一所学校，具有名称、地址等属性。
+附加属性: 为 Human 对象附加一个 School 属性，表示这个人所在的学校。
+
+
+
+```csharp
+using System;
+using System.Windows;
+
+public class Human : DependencyObject
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+
+public class School
+{
+    // 1. 注册附加属性
+    public static readonly DependencyProperty SchoolProperty =
+        DependencyProperty.RegisterAttached(
+            name: "School",                     // 属性名称
+            propertyType: typeof(string),        // 属性类型（学校名称）
+            ownerType: typeof(School),          // 所有者类型
+            defaultMetadata: new FrameworkPropertyMetadata(
+                defaultValue: "Unknown School",  // 默认值
+                propertyChangedCallback: OnSchoolChanged // 属性更改回调
+            )
+        );
+
+    // 2. 定义 Get 方法
+    public static string GetSchool(DependencyObject obj)
+    {
+        return (string)obj.GetValue(SchoolProperty);
+    }
+
+    // 3. 定义 Set 方法
+    public static void SetSchool(DependencyObject obj, string value)
+    {
+        obj.SetValue(SchoolProperty, value);
+    }
+
+    // 4. 属性更改回调方法
+    private static void OnSchoolChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var human = d as Human;
+        string newSchool = e.NewValue as string;
+        string oldSchool = e.OldValue as string;
+
+        // 处理属性更改逻辑
+        if (human != null)
+        {
+            Console.WriteLine($"{human.Name} 的学校从 {oldSchool} 更改为 {newSchool}");
+        }
+    }
+}
+```
+
+```xml
+<Window x:Class="MyApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MyApp">
+    <Grid>
+        <local:Human x:Name="Student" Name="Alice" Age="15" local:School.School="Greenwood High" />
+    </Grid>
+</Window>
+```
+
+#### **代码示例**:
+```csharp
+class Program
+{
+    static void Main(string[] args)
+    {
+        // 创建一个 Human 对象
+        Human student = new Human { Name = "Alice", Age = 15 };
+
+        // 设置附加属性
+        School.SetSchool(student, "Greenwood High");
+
+        // 获取附加属性
+        string schoolName = School.GetSchool(student);
+        Console.WriteLine($"{student.Name} 的学校是 {schoolName}");
+    }
+}
+//输出
+Alice 的学校从 Unknown School 更改为 Greenwood High
+Alice 的学校是 Greenwood High
+```
+
+---
+### 附加属性和依赖属性的snippet：propdp,propa
+
