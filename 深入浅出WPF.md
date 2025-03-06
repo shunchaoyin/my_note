@@ -1,3 +1,17 @@
+
+1. WPF（Windows Presentatation Foundation）是用来编写应用程序的表示层,也有其它表示层例如，Windows Forms,ASP.Net,Silverlight等，业务逻辑层和数据层有自己的开发技术，比如WCF(Windows Communication Foundation)和WF（Windows Workflow Foundation）
+2. WPF采用的是数据驱动，而MVC（Model View Controler）和MVP（Model View presenter）采用的是事件驱动，这很容易导致界面逻辑和业务逻辑混合。
+3. 区别Attribute和property，xmal中两者往往可以相互转换，例如<Grid Height= "100" />中表示Attribute,而<Grid><Height= "100"/></Grid>表示Property,一般来说Property表示对象的成员，而Attribute是编程语法层面的东西。
+4. 同一个界面会存在多种不同的xmal的写法，如下可以简化XAML：
+   1. 尽量使用Attribute形式，而不使用Property
+   2. 利用默认值，尽量不赋值
+   3. 利用XMAL的简写方式，有些标签可以省略。
+5. 标记拓展（Markup Extension）使用大括号的标签，例如<TextBox Text =“{ Binding ElementName = "slider1" Path = "Value"}” />
+   1. 标记拓展，可以嵌套
+   2. 标记拓展，可以简写，例如{Binding Value}和{Binding Path= “Valu”}
+   3. 标记扩展的类名均以Extension结尾，在XAML中可以省略，例如Text＝{"x:static}而不用写成Text＝{"x:StaticExtension}
+6. XMAL中应该使用x:Name还是Name,NAME属性定义在FrameWorkElement中，这是WPF的所有基类，所有控件都有Name属性。但是如果改类不是FrameWorkElement类就要使用x:Name,尽量统一全部使用x:Name
+
 ## C#中WPF中X命名空间中的标记拓展
 
 在 WPF 中，**x 命名空间**（`xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"`）提供了一些特殊的标记扩展（Markup Extensions），用于在 XAML 中实现动态绑定、资源引用、类型转换等功能。这些标记扩展是 WPF 开发中非常重要的工具。
@@ -299,4 +313,107 @@ Alice 的学校是 Greenwood High
 
 ---
 ### 附加属性和依赖属性的snippet：propdp,propa
+
+
+### **WPF 附加事件（Attached Event）**
+
+附加事件是一种特殊的路由事件，允许某个类定义事件，但其他类的对象可以订阅和处理该事件。其核心特性如下：
+- **事件拥有者与事件处理者解耦**：事件定义在一个类中，但可以被其他任意元素订阅。
+- **基于路由事件机制**：附加事件本质是路由事件的扩展，遵循相同的冒泡、隧道和直接传播策略。
+- **常见应用**：WPF 内置的许多事件（如 `Mouse.MouseDown`、`Keyboard.KeyDown`）本质是附加事件。
+
+| **特性**         | **路由事件**                     | **附加事件**                     |
+|-------------------|----------------------------------|----------------------------------|
+| **定义位置**       | 定义在触发事件的类中（如 `Button` 的 `Click`） | 定义在其他类中（如 `Mouse` 类的 `MouseDown`） |
+| **使用场景**       | 处理元素自身的行为（如按钮点击）    | 跨元素监听事件（如全局鼠标事件）   |
+| **语法**          | 直接通过元素名访问（如 `<Button Click="...">`） | 通过附加属性语法访问（如 `<Grid Mouse.MouseDown="...">`） |
+
+示例 1：在 `Grid` 中统一处理子元素的鼠标事件**
+```xml
+<Grid Mouse.MouseDown="Grid_MouseDown">
+    <Button Content="Button 1" Margin="10" />
+    <Button Content="Button 2" Margin="10" />
+    <TextBox Width="100" Margin="10" />
+</Grid>
+```
+
+```csharp
+private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
+{
+    var sourceElement = e.OriginalSource as FrameworkElement;
+    if (sourceElement != null)
+    {
+        MessageBox.Show($"在 Grid 中捕获到 {sourceElement.GetType().Name} 的鼠标点击");
+    }
+}
+```
+**场景**：创建一个 `MessageAttachedEvent` 类，允许任意元素触发自定义消息事件。
+
+#### **步骤 1：定义附加事件**
+```csharp
+public class MessageAttachedEvent
+{
+    // 注册附加事件
+    public static readonly RoutedEvent MessageEvent =
+        EventManager.RegisterRoutedEvent(
+            "Message",
+            RoutingStrategy.Bubble,
+            typeof(RoutedEventHandler),
+            typeof(MessageAttachedEvent));
+
+    // 提供添加和移除处理程序的方法（附加事件语法）
+    public static void AddMessageHandler(DependencyObject obj, RoutedEventHandler handler)
+    {
+        if (obj is UIElement element)
+        {
+            element.AddHandler(MessageEvent, handler);
+        }
+    }
+
+    public static void RemoveMessageHandler(DependencyObject obj, RoutedEventHandler handler)
+    {
+        if (obj is UIElement element)
+        {
+            element.RemoveHandler(MessageEvent, handler);
+        }
+    }
+
+    // 触发事件的方法
+    public static void RaiseMessage(UIElement element, string message)
+    {
+        RoutedEventArgs args = new RoutedEventArgs(MessageEvent, element)
+        {
+            // 自定义数据可存储在 EventArgs 子类中
+            Source = element
+        };
+        element.RaiseEvent(args);
+    }
+}
+```
+```xml
+<Window xmlns:local="clr-namespace:YourNamespace"
+        local:MessageAttachedEvent.Message="Window_Message">
+    <StackPanel>
+        <Button Content="发送消息" Click="Button_Click" />
+    </StackPanel>
+</Window>
+```
+处理事件与触发事件**
+```csharp
+// 事件处理
+private void Window_Message(object sender, RoutedEventArgs e)
+{
+    MessageBox.Show("接收到自定义消息事件！");
+}
+
+// 触发事件
+private void Button_Click(object sender, RoutedEventArgs e)
+{
+    var button = sender as Button;
+    MessageAttachedEvent.RaiseMessage(button, "Hello from Button");
+}
+```
+
+- **附加事件本质是静态路由事件**：通过 `EventManager.RegisterRoutedEvent` 注册，但通过附加属性模式暴露。
+- **事件处理程序存储**：附加事件的处理程序最终会被添加到目标元素的 `RoutedEventHandlers` 列表中。
 
