@@ -459,3 +459,96 @@ protected override void ConfigureViewModelLocator()
 其中，{viewname}ViewModel这里直接在同一目录下将view名称+ViewModel的文件名默认关联。
 
 如果要修改路径或文件名，修改这个变量即可。
+## 10-CustomRegistrations
+作用同上节，这里是用修改注册的方式自定义View和ViewModel的关联。
+
+```csharp
+protected override void ConfigureViewModelLocator()
+        {
+            base.ConfigureViewModelLocator();
+
+            // type / type
+            //ViewModelLocationProvider.Register(typeof(MainWindow).ToString(), typeof(CustomViewModel));
+
+            // type / factory
+            //ViewModelLocationProvider.Register(typeof(MainWindow).ToString(), () => Container.Resolve<CustomViewModel>());
+
+            // generic factory
+            //ViewModelLocationProvider.Register<MainWindow>(() => Container.Resolve<CustomViewModel>());
+
+            // generic type
+            ViewModelLocationProvider.Register<MainWindow, CustomViewModel>();
+        }
+```
+## 11-UsingDelegateCommands
+本例的知识点，全在ViewModel中，看代码：
+
+
+
+```csharp
+  public class MainWindowViewModel : BindableBase
+  {
+      private bool _isEnabled;
+      public bool IsEnabled
+      {
+          get { return _isEnabled; }
+          set
+          {
+              SetProperty(ref _isEnabled, value);
+              ExecuteDelegateCommand.RaiseCanExecuteChanged();
+          }
+      }
+
+      private string _updateText;
+      public string UpdateText
+      {
+          get { return _updateText; }
+          set { SetProperty(ref _updateText, value); }
+      }
+
+
+      public DelegateCommand ExecuteDelegateCommand { get; private set; }
+
+      public DelegateCommand<string> ExecuteGenericDelegateCommand { get; private set; }        
+
+      public DelegateCommand DelegateCommandObservesProperty { get; private set; }
+
+      public DelegateCommand DelegateCommandObservesCanExecute { get; private set; }
+
+
+      public MainWindowViewModel()
+      {
+          ExecuteDelegateCommand = new DelegateCommand(Execute, CanExecute);
+
+          DelegateCommandObservesProperty = new DelegateCommand(Execute, CanExecute).ObservesProperty(() => IsEnabled);
+
+          DelegateCommandObservesCanExecute = new DelegateCommand(Execute).ObservesCanExecute(() => IsEnabled);
+
+          ExecuteGenericDelegateCommand = new DelegateCommand<string>(ExecuteGeneric).ObservesCanExecute(() => IsEnabled);
+      }
+
+      private void Execute()
+      {
+          UpdateText = $"Updated: {DateTime.Now}";
+      }
+
+      private void ExecuteGeneric(string parameter)
+      {
+          UpdateText = parameter;
+      }
+
+      private bool CanExecute()
+      {
+          return IsEnabled;
+      }
+  }
+```
+
+构造函数中建立了4个命令。
+
+其中，33行这个是原始的，CanExecute要靠10行的代码来通知改变。后面的三个，是使用语法糖
+
+ObservesCanExecute(() => IsEnabled)实现了自动通知。
+这里可以试一下，注释掉 ExecuteDelegateCommand.RaiseCanExecuteChanged();然后运行的话，勾选Enabled，其他三个命令都改变状态，而第一个按钮就没有收到变更通知。
+
+39行构造的命令为泛型命令，支持一个泛型的参数。参数在xaml中使用CommandParammeter提供。
