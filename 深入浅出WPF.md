@@ -1,4 +1,11 @@
 
+1. 3中project: 控制台、应用程序、类库。
+2. 项目所编译出来的结果称为程序集Assembly。
+3. 如果类派生自FrameworkElemetn,使用Name和X:Name是相同的，如果不是继承自FrameWorkElement需要使用X:Name；
+## code snipet
+例如for然后两次tab键，可以自动填充；
+也可以新增自己的功能，在工具，代码片段填充管理器中新增；
+
 1. WPF（Windows Presentatation Foundation）是用来编写应用程序的表示层,也有其它表示层例如，Windows Forms,ASP.Net,Silverlight等，业务逻辑层和数据层有自己的开发技术，比如WCF(Windows Communication Foundation)和WF（Windows Workflow Foundation）
 2. WPF采用的是数据驱动，而MVC（Model View Controler）和MVP（Model View presenter）采用的是事件驱动，这很容易导致界面逻辑和业务逻辑混合。
 3. 区别Attribute和property，xmal中两者往往可以相互转换，例如<Grid Height= "100" />中表示Attribute,而<Grid><Height= "100"/></Grid>表示Property,一般来说Property表示对象的成员，而Attribute是编程语法层面的东西。

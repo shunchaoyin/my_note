@@ -1,11 +1,34 @@
-# 1. 深入浅出WPF
-1. 3中project: 控制台、应用程序、类库。
-2. 项目所编译出来的结果称为程序集Assembly。
-3. 如果类派生自FrameworkElemetn,使用Name和X:Name是相同的，如果不是继承自FrameWorkElement需要使用X:Name；
+# MAUI、UWP、XF与WPF的关系
+WPF是微软早期的桌面应用框架，基于.NET Framework，使用XAML和C#，主要针对Windows桌面应用。接下来是UWP，这是Windows 10推出的通用平台，支持多种设备，但依然局限于Windows生态系统。然后是Xamarin.Forms（XF），它允许跨移动平台开发，比如iOS和Android，使用C#和XAML共享代码，但需要平台特定的项目。最后是MAUI，作为XF的进化版，统一了移动和桌面平台，支持更多设备，并且与.NET 6+集成，优化了开发体验。
 
-## code snipet
-例如for然后两次tab键，可以自动填充；
-也可以新增自己的功能，在工具，代码片段填充管理器中新增；
+# MAUI、UWP、XF与WPF的关系
+
+WPF是微软早期的桌面应用框架，基于.NET Framework，使用XAML和C#，主要针对Windows桌面应用。接下来是UWP，这是Windows 10推出的通用平台，支持多种设备，但依然局限于Windows生态系统。然后是Xamarin.Forms（XF），它允许跨移动平台开发，比如iOS和Android，使用C#和XAML共享代码，但需要平台特定的项目。最后是MAUI，作为XF的进化版，统一了移动和桌面平台，支持更多设备，并且与.NET 6+集成，优化了开发体验。
+
+技术图谱
+
+| 技术           | 定位                   | 跨平台能力         | 主要目标设备                | 发布时间       | 技术栈核心       |
+|----------------|------------------------|--------------------|-----------------------------|----------------|------------------|
+| WPF            | 传统桌面应用开发       | 仅限 Windows 桌面  | PC、平板（Windows）         | 2006 (.NET 3.0)| XAML + C#        |
+| UWP            | 统一 Windows 生态开发  | 仅限 Windows 10+ 设备 | PC、Xbox、HoloLens等       | 2015 (Win10)   | XAML + C#/C++    |
+| Xamarin.Forms  | 跨平台移动应用开发     | iOS/Android/Windows | 手机、平板                  | 2014           | XAML + C#        |
+| MAUI           | 统一 .NET 跨平台开发   | 全平台（移动 + 桌面） | 手机、平板、PC、Mac等      | 2022 (.NET 6)  | XAML + C#        |
+
+技术选型对比
+
+| 场景                   | 推荐技术 | 原因                                                                 |
+|------------------------|----------|----------------------------------------------------------------------|
+| 纯 Windows 桌面应用    | WPF      | 成熟稳定，直接访问 Windows API，适合复杂桌面业务场景                 |
+| Windows 生态全设备覆盖 | UWP      | 需适配 Xbox/HoloLens 等设备时使用（注意：UWP 已非微软未来重点）       |
+| 移动端跨平台开发       | MAUI     | Xamarin.Forms 的官方替代方案，长期支持，开发效率高                   |
+| 新项目全平台覆盖       | MAUI     | 统一代码库支持 iOS/Android/Windows/macOS，减少维护成本               |
+| 旧 Xamarin.Forms 迁移  | MAUI     | 官方升级路径，享受性能优化和新特性（如 Blazor 混合开发）             |
+
+
+
+
+
+
 
 # WPF项目实战合集
 链接：https://github.com/HenJigg/my-todoapp
