@@ -2,13 +2,9 @@
 1. [官方文档](https://learn.microsoft.com/zh-cn/dotnet/communitytoolkit/mvvm/)
 2. [官方代码Demo](https://github.com/CommunityToolkit/MVVM-Samples)
 3. 
-## MVVM 源生成器
-[源生成器](https://learn.microsoft.com/zh-cn/dotnet/csharp/roslyn-sdk/#source-generators)
 
-MVVM 工具包包含全新的 Roslyn 源生成器，有助于在使用 MVVM 体系结构编写代码时大幅减少样本。 它们可以简化需要设置可观察属性、命令等的方案。 如果你不熟悉源生成器，可以在上面链接详细了解。 以下是工作原理的简化图：
-![alt text](image.png)
 
-## MVVM设计模式
+# MVVM设计模式
 Model: Represents the data and business logic. It is independent of the UI and contains the application's core logic.
 View: Represents the UI. In WPF, this is typically defined in XAML files. The View binds to properties and commands in the ViewModel.
 ViewModel: Acts as an intermediary between the Model and the View. It exposes data and commands to the View via binding. The ViewModel manipulates the Model and updates the View.
@@ -18,18 +14,14 @@ ViewModel: Acts as an intermediary between the Model and the View. It exposes da
 
 **CommunityToolkit.MVVM**（以前称为 **Microsoft.Toolkit.MVVM**）是一个轻量级、高性能的 MVVM（Model-View-ViewModel）框架，专为 .NET 开发设计。它是 .NET 社区工具包（.NET Community Toolkit）的一部分，旨在简化 MVVM 模式的实现，特别适合 WPF、WinUI、UWP 和 .NET MAUI 等 XAML 平台。
 
+# 3. **核心功能**
+## 1. MVVM 源生成器
+[源生成器](https://learn.microsoft.com/zh-cn/dotnet/csharp/roslyn-sdk/#source-generators)
 
-## 2. **安装 CommunityToolkit.MVVM**
-通过 NuGet 安装：
-```bash
-dotnet add package CommunityToolkit.Mvvm
-```
+MVVM 工具包包含全新的 Roslyn 源生成器，有助于在使用 MVVM 体系结构编写代码时大幅减少样本。 它们可以简化需要设置可观察属性、命令等的方案。 如果你不熟悉源生成器，可以在上面链接详细了解。 以下是工作原理的简化图：
+![alt text](image.png)
 
----
-
-## 3. **核心功能**
-
-### (1) **ObservableObject**
+### (1) **ObservableProperty 特性**
 `ObservableObject` 是一个基类，用于实现 `INotifyPropertyChanged` 接口，简化属性通知的代码。
 
 **示例**：
